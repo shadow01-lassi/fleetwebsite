@@ -2,9 +2,17 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Hero from '@/components/ui/animated-shader-hero';
+import { PoemAnimation } from '@/components/ui/3d-animation';
 import { DataSimulator } from '@/services/dataService';
 import { Lock, Mail, AlertTriangle, ShieldCheck, Cpu } from 'lucide-react';
+
+const ANIMATION_DATA = {
+  poemHTML: `
+    <p>The <span>love</span> between Ayla and Leo ignited in the old courtyard, each morning their swords clashed under dawn’s glow, faces streaked with <span>dust</span> and sweat; they <span>danced</span> between parries, every laugh a spark of joy against uncertain hearts. She stepped forward with <span>courage</span>, he met her gaze with open warmth, two souls seeking a shared <span>triumph</span> in their vulnerability. When blades slipped and one <span>faltered</span>, the other caught them—forearms brushing, pulses aligned in a daring heartbeat. In failure they found grace; in triumph they discovered unity. Each moment spent <span>daring</span> to trust the other built a bond impervious to fear. At dusk, they sheathed their swords, stepping from the <span>arena</span> hand in hand, knowing love blooms not through perfection, but by <span>daring greatly</span> together.</p>
+  `,
+  backgroundImageUrl: "https://i.ibb.co/q3XSxR9W/20250831-120144.jpg",
+  boyImageUrl: "https://i.ibb.co/Y4FKvK38/20250831-113022.png"
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -63,11 +71,12 @@ export default function LoginPage() {
 
   return (
     <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Shader Hero */}
+      {/* Background 3D Poem Animation */}
       <div className="absolute inset-0 z-0">
-        <Hero
-          headline={{ line1: '', line2: '' }}
-          subtitle=""
+        <PoemAnimation
+          poemHTML={ANIMATION_DATA.poemHTML}
+          backgroundImageUrl={ANIMATION_DATA.backgroundImageUrl}
+          boyImageUrl={ANIMATION_DATA.boyImageUrl}
         />
       </div>
 
