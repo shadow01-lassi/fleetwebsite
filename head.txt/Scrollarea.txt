@@ -1,4 +1,3 @@
-Scroll area
 You are given a task to integrate an existing React component in the codebase
 
 The codebase should support:
@@ -12,605 +11,424 @@ Determine the default path for components and styles.
 If default path for components is not /components/ui, provide instructions on why it's important to create this folder
 Copy-paste this component to /components/ui folder:
 ```tsx
-scroll-expansion-hero.tsx
+story-scroll.tsx
 'use client';
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  ReactNode,
-  TouchEvent,
-  WheelEvent,
-} from 'react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
-interface ScrollExpandMediaProps {
-  mediaType?: 'video' | 'image';
-  mediaSrc: string;
-  posterSrc?: string;
-  bgImageSrc: string;
-  title?: string;
-  date?: string;
-  scrollToExpand?: string;
-  textBlend?: boolean;
-  children?: ReactNode;
+gsap.registerPlugin(ScrollTrigger);
+
+function cx(...parts: Array<string | undefined | false | null>): string {
+  return parts.filter(Boolean).join(' ');
 }
 
-const ScrollExpandMedia = ({
-  mediaType = 'video',
-  mediaSrc,
-  posterSrc,
-  bgImageSrc,
-  title,
-  date,
-  scrollToExpand,
-  textBlend,
+export interface FlowSectionProps {
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+  'aria-label'?: string;
+}
+
+export const FlowSection: React.FC<FlowSectionProps> = ({
+  className,
+  style = {},
   children,
-}: ScrollExpandMediaProps) => {
-  const [scrollProgress, setScrollProgress] = useState<number>(0);
-  const [showContent, setShowContent] = useState<boolean>(false);
-  const [mediaFullyExpanded, setMediaFullyExpanded] = useState<boolean>(false);
-  const [touchStartY, setTouchStartY] = useState<number>(0);
-  const [isMobileState, setIsMobileState] = useState<boolean>(false);
+  'aria-label': ariaLabel,
+}) => (
+  <section
+    data-flow-section
+    aria-label={ariaLabel}
+    className={cx('relative min-h-screen w-full overflow-hidden', className)}
+  >
+    <div
+      data-flow-inner
+      className={cx(
+        'flow-art-container relative flex min-h-screen w-full flex-col justify-between gap-6 px-[4vw] pt-[clamp(2rem,8vw,4vw)] pb-[4vw]',
+        'will-change-transform',
+      )}
+      style={{ transformOrigin: 'bottom left', ...style }}
+    >
+      {children}
+    </div>
+  </section>
+);
 
-  const sectionRef = useRef<HTMLDivElement | null>(null);
+export interface FlowArtProps {
+  children: React.ReactNode;
+  className?: string;
+  'aria-label'?: string;
+}
 
-  useEffect(() => {
-    setScrollProgress(0);
-    setShowContent(false);
-    setMediaFullyExpanded(false);
-  }, [mediaType]);
+const childCount = (children: React.ReactNode) => React.Children.count(children);
 
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (mediaFullyExpanded && e.deltaY < 0 && window.scrollY <= 5) {
-        setMediaFullyExpanded(false);
-        e.preventDefault();
-      } else if (!mediaFullyExpanded) {
-        e.preventDefault();
-        const scrollDelta = e.deltaY * 0.0009;
-        const newProgress = Math.min(
-          Math.max(scrollProgress + scrollDelta, 0),
-          1
-        );
-        setScrollProgress(newProgress);
-
-        if (newProgress >= 1) {
-          setMediaFullyExpanded(true);
-          setShowContent(true);
-        } else if (newProgress < 0.75) {
-          setShowContent(false);
-        }
-      }
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      setTouchStartY(e.touches[0].clientY);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!touchStartY) return;
-
-      const touchY = e.touches[0].clientY;
-      const deltaY = touchStartY - touchY;
-
-      if (mediaFullyExpanded && deltaY < -20 && window.scrollY <= 5) {
-        setMediaFullyExpanded(false);
-        e.preventDefault();
-      } else if (!mediaFullyExpanded) {
-        e.preventDefault();
-        // Increase sensitivity for mobile, especially when scrolling back
-        const scrollFactor = deltaY < 0 ? 0.008 : 0.005; // Higher sensitivity for scrolling back
-        const scrollDelta = deltaY * scrollFactor;
-        const newProgress = Math.min(
-          Math.max(scrollProgress + scrollDelta, 0),
-          1
-        );
-        setScrollProgress(newProgress);
-
-        if (newProgress >= 1) {
-          setMediaFullyExpanded(true);
-          setShowContent(true);
-        } else if (newProgress < 0.75) {
-          setShowContent(false);
-        }
-
-        setTouchStartY(touchY);
-      }
-    };
-
-    const handleTouchEnd = (): void => {
-      setTouchStartY(0);
-    };
-
-    const handleScroll = (): void => {
-      if (!mediaFullyExpanded) {
-        window.scrollTo(0, 0);
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel as unknown as EventListener, {
-      passive: false,
-    });
-    window.addEventListener('scroll', handleScroll as EventListener);
-    window.addEventListener(
-      'touchstart',
-      handleTouchStart as unknown as EventListener,
-      { passive: false }
-    );
-    window.addEventListener(
-      'touchmove',
-      handleTouchMove as unknown as EventListener,
-      { passive: false }
-    );
-    window.addEventListener('touchend', handleTouchEnd as EventListener);
-
-    return () => {
-      window.removeEventListener(
-        'wheel',
-        handleWheel as unknown as EventListener
-      );
-      window.removeEventListener('scroll', handleScroll as EventListener);
-      window.removeEventListener(
-        'touchstart',
-        handleTouchStart as unknown as EventListener
-      );
-      window.removeEventListener(
-        'touchmove',
-        handleTouchMove as unknown as EventListener
-      );
-      window.removeEventListener('touchend', handleTouchEnd as EventListener);
-    };
-  }, [scrollProgress, mediaFullyExpanded, touchStartY]);
+const FlowArt: React.FC<FlowArtProps> = ({
+  children,
+  className,
+  'aria-label': ariaLabel = 'Story scroll',
+}) => {
+  const containerRef = useRef<HTMLElement>(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    const checkIfMobile = (): void => {
-      setIsMobileState(window.innerWidth < 768);
-    };
-
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-
-    return () => window.removeEventListener('resize', checkIfMobile);
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
   }, []);
 
-  const mediaWidth = 300 + scrollProgress * (isMobileState ? 650 : 1250);
-  const mediaHeight = 400 + scrollProgress * (isMobileState ? 200 : 400);
-  const textTranslateX = scrollProgress * (isMobileState ? 180 : 150);
+  useGSAP(
+    () => {
+      if (!containerRef.current || reducedMotion) return;
 
-  const firstWord = title ? title.split(' ')[0] : '';
-  const restOfTitle = title ? title.split(' ').slice(1).join(' ') : '';
+      const sections = Array.from(
+        containerRef.current.querySelectorAll<HTMLElement>('[data-flow-section]'),
+      );
+      if (sections.length === 0) return;
+
+      const triggers: ScrollTrigger[] = [];
+
+      sections.forEach((section, i) => {
+        gsap.set(section, { zIndex: i + 1 });
+
+        const inner = section.querySelector<HTMLElement>('.flow-art-container');
+        if (!inner) return;
+
+        if (i > 0) {
+          gsap.set(inner, { rotation: 30, transformOrigin: 'bottom left' });
+          const tween = gsap.to(inner, {
+            rotation: 0,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top bottom',
+              end: 'top 25%',
+              scrub: true,
+            },
+          });
+          if (tween.scrollTrigger) triggers.push(tween.scrollTrigger);
+        }
+
+        if (i < sections.length - 1) {
+          triggers.push(
+            ScrollTrigger.create({
+              trigger: section,
+              start: 'bottom bottom',
+              end: 'bottom top',
+              pin: true,
+              pinSpacing: false,
+            }),
+          );
+        }
+      });
+
+      ScrollTrigger.refresh();
+
+      return () => {
+        triggers.forEach((t) => t.kill());
+      };
+    },
+    { scope: containerRef, dependencies: [childCount(children), reducedMotion] },
+  );
 
   return (
-    <div
-      ref={sectionRef}
-      className='transition-colors duration-700 ease-in-out overflow-x-hidden'
+    <main
+      ref={containerRef}
+      aria-label={ariaLabel}
+      className={cx('w-full overflow-x-hidden', className)}
     >
-      <section className='relative flex flex-col items-center justify-start min-h-[100dvh]'>
-        <div className='relative w-full flex flex-col items-center min-h-[100dvh]'>
-          <motion.div
-            className='absolute inset-0 z-0 h-full'
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 - scrollProgress }}
-            transition={{ duration: 0.1 }}
-          >
-            <Image
-              src={bgImageSrc}
-              alt='Background'
-              width={1920}
-              height={1080}
-              className='w-screen h-screen'
-              style={{
-                objectFit: 'cover',
-                objectPosition: 'center',
-              }}
-              priority
-            />
-            <div className='absolute inset-0 bg-black/10' />
-          </motion.div>
-
-          <div className='container mx-auto flex flex-col items-center justify-start relative z-10'>
-            <div className='flex flex-col items-center justify-center w-full h-[100dvh] relative'>
-              <div
-                className='absolute z-0 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-none rounded-2xl'
-                style={{
-                  width: `${mediaWidth}px`,
-                  height: `${mediaHeight}px`,
-                  maxWidth: '95vw',
-                  maxHeight: '85vh',
-                  boxShadow: '0px 0px 50px rgba(0, 0, 0, 0.3)',
-                }}
-              >
-                {mediaType === 'video' ? (
-                  mediaSrc.includes('youtube.com') ? (
-                    <div className='relative w-full h-full pointer-events-none'>
-                      <iframe
-                        width='100%'
-                        height='100%'
-                        src={
-                          mediaSrc.includes('embed')
-                            ? mediaSrc +
-                              (mediaSrc.includes('?') ? '&' : '?') +
-                              'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&disablekb=1&modestbranding=1'
-                            : mediaSrc.replace('watch?v=', 'embed/') +
-                              '?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&disablekb=1&modestbranding=1&playlist=' +
-                              mediaSrc.split('v=')[1]
-                        }
-                        className='w-full h-full rounded-xl'
-                        frameBorder='0'
-                        allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-                        allowFullScreen
-                      />
-                      <div
-                        className='absolute inset-0 z-10'
-                        style={{ pointerEvents: 'none' }}
-                      ></div>
-
-                      <motion.div
-                        className='absolute inset-0 bg-black/30 rounded-xl'
-                        initial={{ opacity: 0.7 }}
-                        animate={{ opacity: 0.5 - scrollProgress * 0.3 }}
-                        transition={{ duration: 0.2 }}
-                      />
-                    </div>
-                  ) : (
-                    <div className='relative w-full h-full pointer-events-none'>
-                      <video
-                        src={mediaSrc}
-                        poster={posterSrc}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        preload='auto'
-                        className='w-full h-full object-cover rounded-xl'
-                        controls={false}
-                        disablePictureInPicture
-                        disableRemotePlayback
-                      />
-                      <div
-                        className='absolute inset-0 z-10'
-                        style={{ pointerEvents: 'none' }}
-                      ></div>
-
-                      <motion.div
-                        className='absolute inset-0 bg-black/30 rounded-xl'
-                        initial={{ opacity: 0.7 }}
-                        animate={{ opacity: 0.5 - scrollProgress * 0.3 }}
-                        transition={{ duration: 0.2 }}
-                      />
-                    </div>
-                  )
-                ) : (
-                  <div className='relative w-full h-full'>
-                    <Image
-                      src={mediaSrc}
-                      alt={title || 'Media content'}
-                      width={1280}
-                      height={720}
-                      className='w-full h-full object-cover rounded-xl'
-                    />
-
-                    <motion.div
-                      className='absolute inset-0 bg-black/50 rounded-xl'
-                      initial={{ opacity: 0.7 }}
-                      animate={{ opacity: 0.7 - scrollProgress * 0.3 }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  </div>
-                )}
-
-                <div className='flex flex-col items-center text-center relative z-10 mt-4 transition-none'>
-                  {date && (
-                    <p
-                      className='text-2xl text-blue-200'
-                      style={{ transform: `translateX(-${textTranslateX}vw)` }}
-                    >
-                      {date}
-                    </p>
-                  )}
-                  {scrollToExpand && (
-                    <p
-                      className='text-blue-200 font-medium text-center'
-                      style={{ transform: `translateX(${textTranslateX}vw)` }}
-                    >
-                      {scrollToExpand}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div
-                className={`flex items-center justify-center text-center gap-4 w-full relative z-10 transition-none flex-col ${
-                  textBlend ? 'mix-blend-difference' : 'mix-blend-normal'
-                }`}
-              >
-                <motion.h2
-                  className='text-4xl md:text-5xl lg:text-6xl font-bold text-blue-200 transition-none'
-                  style={{ transform: `translateX(-${textTranslateX}vw)` }}
-                >
-                  {firstWord}
-                </motion.h2>
-                <motion.h2
-                  className='text-4xl md:text-5xl lg:text-6xl font-bold text-center text-blue-200 transition-none'
-                  style={{ transform: `translateX(${textTranslateX}vw)` }}
-                >
-                  {restOfTitle}
-                </motion.h2>
-              </div>
-            </div>
-
-            <motion.section
-              className='flex flex-col w-full px-8 py-10 md:px-16 lg:py-20'
-              initial={{ opacity: 0 }}
-              animate={{ opacity: showContent ? 1 : 0 }}
-              transition={{ duration: 0.7 }}
-            >
-              {children}
-            </motion.section>
-          </div>
-        </div>
-      </section>
-    </div>
+      {children}
+    </main>
   );
 };
 
-export default ScrollExpandMedia;
+export default FlowArt;
 
 
 demo.tsx
-'use client';
+import FlowArt, { FlowSection } from '../components/ui/story-scroll.tsx';
 
-import { useState, useEffect } from 'react';
-import ScrollExpandMedia from '@/components/blocks/scroll-expansion-hero';
+export default function FlowArtDefaultDemo() {
+  return (
+    <FlowArt aria-label="Présentation Flow Art">
+      <FlowSection aria-label="Qui nous sommes" style={{ backgroundColor: '#fd5200', color: '#fff' }}>
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">01 — Who we are</p>
+        <hr className="my-[2vw] border-none border-t border-black opacity-100" />
+        <div>
+          <h1
+            className="text-[clamp(3.5rem,12vw,14rem)] font-bold leading-[0.85] uppercase tracking-tight"
+          >
+            Create
+            <br />
+            Without
+            <br />
+            Limits
+          </h1>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-black opacity-100" />
+        <p className="mt-auto max-w-[50ch] text-[clamp(1rem,2.5vw,2rem)] font-normal leading-relaxed">
+          We believe every artist deserves a platform that puts creativity first. No algorithms, no
+          noise — just pure art and the people who make it.
+        </p>
+      </FlowSection>
 
-interface MediaAbout {
-  overview: string;
-  conclusion: string;
+      <FlowSection aria-label="La mission" style={{ backgroundColor: '#000', color: '#fff' }}>
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">02 — The mission</p>
+        <hr className="my-[2vw] border-none border-t border-white/60" />
+        <div>
+          <h2
+            className="text-[clamp(3.5rem,12vw,14rem)] font-bold leading-[0.85] uppercase tracking-tight"
+          >
+            Art
+            <br />
+            First
+            <br />
+            Always
+          </h2>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-white/60" />
+        <p className="max-w-[50ch] text-[clamp(1rem,2.5vw,2rem)] font-normal leading-relaxed">
+          A global community built for artists, by artists. We&apos;re rewriting the rules of how
+          creative work gets seen, shared, and valued.
+        </p>
+        <hr className="my-[2vw] border-none border-t border-white/60" />
+        <div className="flex flex-wrap gap-[3vw]">
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Discovery</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Human-curated collections that put real eyes on real art. No algorithms deciding your
+              fate.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Community</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Find collaborators, mentors, and fellow creatives who push your work forward.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Value</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Fair pricing. Transparent commissions. Artists keep what they earn. Always.
+            </p>
+          </div>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-white/60" />
+        <div className="flex flex-wrap gap-[3vw]">
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Exhibitions</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Virtual and physical showcases curated from our global network.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Mentorship</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Paired guidance from established artists who&apos;ve walked the path.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Residencies</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Access funded creative retreats around the world.
+            </p>
+          </div>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-white/60" />
+        <p className="mt-auto ml-auto max-w-[50ch] text-right text-[clamp(1rem,2.5vw,2rem)] font-normal leading-relaxed">
+          Every feature we build starts with one question — does this serve the artist?
+        </p>
+      </FlowSection>
+
+      <FlowSection aria-label="Comment ça marche" style={{ backgroundColor: '#F5F0E8', color: '#000' }}>
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">03 — How it works</p>
+        <hr className="my-[2vw] border-none border-t border-black/60" />
+        <div>
+          <h2
+            className="text-[clamp(3.5rem,12vw,14rem)] font-bold leading-[0.85] uppercase tracking-tight"
+          >
+            Show
+            <br />
+            Up.
+            <br />
+            Stand
+            <br />
+            Out.
+          </h2>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-black/60" />
+        <p className="max-w-[50ch] text-[clamp(1rem,2.5vw,2rem)] font-normal leading-relaxed">
+          Three steps. Zero complexity. Your creative career starts moving the moment you sign up.
+        </p>
+        <hr className="my-[2vw] border-none border-t border-black/60" />
+        <div className="flex flex-wrap gap-[3vw]">
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">01 — Upload</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Drag, drop, done. Your portfolio goes live in seconds with full creative control.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">02 — Connect</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Match with collectors, galleries, and brands actively looking for your style.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">03 — Grow</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Track engagement, manage commissions, and scale your practice — all in one place.
+            </p>
+          </div>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-black/60" />
+        <div className="flex flex-wrap gap-[3vw]">
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">04 — Sell</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Set your prices, manage editions, handle licensing. Built-in commerce tools.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">05 — Collaborate</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Find your people. Joint projects, split commissions, shared studios.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">06 — Evolve</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Your practice changes. Your platform should too. Flexible tools that adapt.
+            </p>
+          </div>
+        </div>
+      </FlowSection>
+
+      <FlowSection aria-label="La vision" style={{ backgroundColor: '#1A3DE8', color: '#fff' }}>
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">04 — The vision</p>
+        <hr className="my-[2vw] border-none border-t border-white/50" />
+        <div>
+          <h2
+            className="text-[clamp(3.5rem,12vw,14rem)] font-bold leading-[0.85] uppercase tracking-tight"
+          >
+            Future
+            <br />
+            Of
+            <br />
+            Art
+          </h2>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-white/50" />
+        <p className="max-w-[50ch] text-[clamp(1rem,2.5vw,2rem)] font-normal leading-relaxed">
+          We&apos;re not just building a platform. We&apos;re building a movement.
+        </p>
+        <hr className="my-[2vw] border-none border-t border-white/50" />
+        <div className="flex flex-wrap gap-[3vw]">
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">10K+</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Artists from 80 countries already shaping the future with us.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">$2M+</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Paid directly to creators in our first year. Zero hidden fees.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">100%</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Artist-owned. Every decision we make starts with the creator.
+            </p>
+          </div>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-white/50" />
+        <p className="max-w-[50ch] text-[clamp(1rem,2.5vw,2rem)] font-normal leading-relaxed">
+          The art world has been broken for decades. Galleries take 50%. Algorithms bury talent.
+          We&apos;re here to change that — permanently.
+        </p>
+        <hr className="my-[2vw] border-none border-t border-white/50" />
+        <div className="flex flex-wrap gap-[3vw]">
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Open access</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              No invite codes. No waiting lists. If you make art, you belong here.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Global reach</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              Your work seen in 120+ countries from day one.
+            </p>
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <p className="mb-2 text-sm font-bold uppercase tracking-wider">Artist-first economics</p>
+            <p className="text-[clamp(0.85rem,1.3vw,1.05rem)] leading-relaxed opacity-75">
+              You keep 90% of every sale. The remaining 10% funds the platform and the mission.
+            </p>
+          </div>
+        </div>
+      </FlowSection>
+
+      <FlowSection aria-label="Nous rejoindre" style={{ backgroundColor: '#000', color: '#fff' }}>
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">05 — Join us</p>
+        <hr className="my-[2vw] border-none border-t border-black/60" />
+        <div>
+          <h2
+            className="text-[clamp(3.5rem,12vw,14rem)] font-bold leading-[0.85] uppercase tracking-tight"
+          >
+            Ready
+            <br />
+            To
+            <br />
+            Begin?
+          </h2>
+        </div>
+        <hr className="my-[2vw] border-none border-t border-black/60" />
+        <p className="mt-auto max-w-[50ch] text-[clamp(1rem,2.5vw,2rem)] font-normal leading-relaxed">
+          Take control of your creative journey. Join now and let&apos;s shape the future of the art
+          world together.
+        </p>
+      </FlowSection>
+    </FlowArt>
+  );
 }
-
-interface MediaContent {
-  src: string;
-  poster?: string;
-  background: string;
-  title: string;
-  date: string;
-  scrollToExpand: string;
-  about: MediaAbout;
-}
-
-interface MediaContentCollection {
-  [key: string]: MediaContent;
-}
-
-const sampleMediaContent: MediaContentCollection = {
-  video: {
-    src: 'https://me7aitdbxq.ufs.sh/f/2wsMIGDMQRdYuZ5R8ahEEZ4aQK56LizRdfBSqeDMsmUIrJN1',
-    poster:
-      'https://images.pexels.com/videos/5752729/space-earth-universe-cosmos-5752729.jpeg',
-    background:
-      'https://me7aitdbxq.ufs.sh/f/2wsMIGDMQRdYMNjMlBUYHaeYpxduXPVNwf8mnFA61L7rkcoS',
-    title: 'Immersive Video Experience',
-    date: 'Cosmic Journey',
-    scrollToExpand: 'Scroll to Expand Demo',
-    about: {
-      overview:
-        'This is a demonstration of the ScrollExpandMedia component with a video. As you scroll, the video expands to fill more of the screen, creating an immersive experience. This component is perfect for showcasing video content in a modern, interactive way.',
-      conclusion:
-        'The ScrollExpandMedia component provides a unique way to engage users with your content through interactive scrolling. Try switching between video and image modes to see different implementations.',
-    },
-  },
-  image: {
-    src: 'https://images.unsplash.com/photo-1682687982501-1e58ab814714?q=80&w=1280&auto=format&fit=crop',
-    background:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920&auto=format&fit=crop',
-    title: 'Dynamic Image Showcase',
-    date: 'Underwater Adventure',
-    scrollToExpand: 'Scroll to Expand Demo',
-    about: {
-      overview:
-        'This is a demonstration of the ScrollExpandMedia component with an image. The same smooth expansion effect works beautifully with static images, allowing you to create engaging visual experiences without video content.',
-      conclusion:
-        'The ScrollExpandMedia component works equally well with images and videos. This flexibility allows you to choose the media type that best suits your content while maintaining the same engaging user experience.',
-    },
-  },
-};
-
-const MediaContent = ({ mediaType }: { mediaType: 'video' | 'image' }) => {
-  const currentMedia = sampleMediaContent[mediaType];
-
-  return (
-    <div className='max-w-4xl mx-auto'>
-      <h2 className='text-3xl font-bold mb-6 text-black dark:text-white'>
-        About This Component
-      </h2>
-      <p className='text-lg mb-8 text-black dark:text-white'>
-        {currentMedia.about.overview}
-      </p>
-
-      <p className='text-lg mb-8 text-black dark:text-white'>
-        {currentMedia.about.conclusion}
-      </p>
-    </div>
-  );
-};
-
-export const VideoExpansionTextBlend = () => {
-  const mediaType = 'video';
-  const currentMedia = sampleMediaContent[mediaType];
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const resetEvent = new Event('resetSection');
-    window.dispatchEvent(resetEvent);
-  }, []);
-
-  return (
-    <div className='min-h-screen'>
-      <ScrollExpandMedia
-        mediaType={mediaType}
-        mediaSrc={currentMedia.src}
-        posterSrc={currentMedia.poster}
-        bgImageSrc={currentMedia.background}
-        title={currentMedia.title}
-        date={currentMedia.date}
-        scrollToExpand={currentMedia.scrollToExpand}
-        textBlend
-      >
-        <MediaContent mediaType={mediaType} />
-      </ScrollExpandMedia>
-    </div>
-  );
-};
-
-export const ImageExpansionTextBlend = () => {
-  const mediaType = 'image';
-  const currentMedia = sampleMediaContent[mediaType];
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const resetEvent = new Event('resetSection');
-    window.dispatchEvent(resetEvent);
-  }, []);
-
-  return (
-    <div className='min-h-screen'>
-      <ScrollExpandMedia
-        mediaType={mediaType}
-        mediaSrc={currentMedia.src}
-        bgImageSrc={currentMedia.background}
-        title={currentMedia.title}
-        date={currentMedia.date}
-        scrollToExpand={currentMedia.scrollToExpand}
-        textBlend
-      >
-        <MediaContent mediaType={mediaType} />
-      </ScrollExpandMedia>
-    </div>
-  );
-};
-
-export const VideoExpansion = () => {
-  const mediaType = 'video';
-  const currentMedia = sampleMediaContent[mediaType];
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const resetEvent = new Event('resetSection');
-    window.dispatchEvent(resetEvent);
-  }, []);
-
-  return (
-    <div className='min-h-screen'>
-      <ScrollExpandMedia
-        mediaType={mediaType}
-        mediaSrc={currentMedia.src}
-        posterSrc={currentMedia.poster}
-        bgImageSrc={currentMedia.background}
-        title={currentMedia.title}
-        date={currentMedia.date}
-        scrollToExpand={currentMedia.scrollToExpand}
-      >
-        <MediaContent mediaType={mediaType} />
-      </ScrollExpandMedia>
-    </div>
-  );
-};
-
-export const ImageExpansion = () => {
-  const mediaType = 'image';
-  const currentMedia = sampleMediaContent[mediaType];
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const resetEvent = new Event('resetSection');
-    window.dispatchEvent(resetEvent);
-  }, []);
-
-  return (
-    <div className='min-h-screen'>
-      <ScrollExpandMedia
-        mediaType={mediaType}
-        mediaSrc={currentMedia.src}
-        bgImageSrc={currentMedia.background}
-        title={currentMedia.title}
-        date={currentMedia.date}
-        scrollToExpand={currentMedia.scrollToExpand}
-      >
-        <MediaContent mediaType={mediaType} />
-      </ScrollExpandMedia>
-    </div>
-  );
-};
-
-const Demo = () => {
-  const [mediaType, setMediaType] = useState('video');
-  const currentMedia = sampleMediaContent[mediaType];
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const resetEvent = new Event('resetSection');
-    window.dispatchEvent(resetEvent);
-  }, [mediaType]);
-
-  return (
-    <div className='min-h-screen'>
-      <div className='fixed top-4 right-4 z-50 flex gap-2'>
-        <button
-          onClick={() => setMediaType('video')}
-          className={`px-4 py-2 rounded-lg ${
-            mediaType === 'video'
-              ? 'bg-white text-black'
-              : 'bg-black/50 text-white border border-white/30'
-          }`}
-        >
-          Video
-        </button>
-
-        <button
-          onClick={() => setMediaType('image')}
-          className={`px-4 py-2 rounded-lg ${
-            mediaType === 'image'
-              ? 'bg-white text-black'
-              : 'bg-black/50 text-white border border-white/30'
-          }`}
-        >
-          Image
-        </button>
-      </div>
-
-      <ScrollExpandMedia
-        mediaType={mediaType as 'video' | 'image'}
-        mediaSrc={currentMedia.src}
-        posterSrc={mediaType === 'video' ? currentMedia.poster : undefined}
-        bgImageSrc={currentMedia.background}
-        title={currentMedia.title}
-        date={currentMedia.date}
-        scrollToExpand={currentMedia.scrollToExpand}
-      >
-        <MediaContent mediaType={mediaType as 'video' | 'image'} />
-      </ScrollExpandMedia>
-    </div>
-  );
-};
-
-export default Demo;
 
 ```
 
 Install NPM dependencies:
 ```bash
-framer-motion
+gsap, @gsap/react
+```
+
+Extend existing Tailwind 4 index.css with this code (or if project uses Tailwind 3, extend tailwind.config.js or globals.css):
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
 ```
 
 Implementation Guidelines
  1. Analyze the component structure and identify all required dependencies
  2. Review the component's argumens and state
- 3. Identify any required context providers or hooks and i
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them

@@ -1,17 +1,3 @@
-You are given a task to integrate an existing React component in the codebase
-
-The codebase should support:
-- shadcn project structure  
-- Tailwind CSS
-- Typescript
-
-If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
-
-Determine the default path for components and styles. 
-If default path for components is not /components/ui, provide instructions on why it's important to create this folder
-Copy-paste this component to /components/ui folder:
-```tsx
-animated-feature-carousel.tsx
 "use client"
 
 import {
@@ -22,7 +8,6 @@ import {
   useState,
   type MouseEvent,
 } from "react"
-import clsx from "clsx"
 import {
   AnimatePresence,
   motion,
@@ -42,7 +27,7 @@ const cn = (...classes: (string | boolean | undefined)[]) => {
 
 // Placeholder for image assets if they are not found.
 const placeholderImage = (text = "Image") =>
-  `https://placehold.co/600x400/1a1a1a/ffffff?text=${text}`
+  `https://placehold.co/600x400/0f172a/ffffff?text=${text}`
 
 // --- Types ---
 type StaticImageData = string;
@@ -98,27 +83,27 @@ const TOTAL_STEPS = 4
 const steps: readonly Step[] = [
   {
     id: "1",
-    name: "Step 1",
-    title: "Seamless Integration",
-    description: "Connect your tools and workflows effortlessly. Our platform integrates with hundreds of popular apps.",
+    name: "Operations Dashboard",
+    title: "Executive Telemetry Console",
+    description: "Monitor coordinates, Circular active fleet metrics, tracker offline ratios, and real-time ignition key controls from one screen.",
   },
   {
     id: "2",
-    name: "Step 2",
-    title: "Powerful Analytics",
-    description: "Gain deep insights with our advanced analytics dashboard. Track your performance and make data-driven decisions.",
+    name: "Live GPS Map",
+    title: "Interactive Coordinates Relay",
+    description: "Color-pulsing markers sync with Leaflet. Tapping nodes opens glassmorphism modals displaying plates, speeds, and direct lockdown keys.",
   },
   {
     id: "3",
-    name: "Step 3",
-    title: "Collaborative Workspace",
-    description: "Work together in real-time. Share, comment, and edit with your team from anywhere in the world.",
+    name: "Driver Auditor",
+    title: "Split-Screen Licensing Reviews",
+    description: "Audit pending driver profiles instantly. Multi-tab visual inspectors let admins inspect licenses and utility bills with deep zoom keys.",
   },
   {
     id: "4",
-    name: "Step 4",
-    title: "Automated Workflows",
-    description: "Put your tasks on autopilot. Create custom automations to save time and reduce manual work.",
+    name: "Rentals Timeline",
+    title: "Checks & Returns Timeline",
+    description: "Track return checklists with post-rental inspection photo uploads (Front, Back, Left, Right) to close out contracts automatically.",
   },
 ]
 
@@ -155,29 +140,20 @@ interface AnimatedStepImageProps extends StepImageProps {
 function useNumberCycler(totalSteps: number = TOTAL_STEPS, interval: number = 5000) {
   const [currentNumber, setCurrentNumber] = useState(0);
 
-  // This effect handles the automatic cycling.
-  // It depends on `currentNumber`, so every time the step changes,
-  // it will clear the old timer and set a new one for the next step.
   useEffect(() => {
     const timerId = setTimeout(() => {
       setCurrentNumber((prev) => (prev + 1) % totalSteps);
     }, interval);
 
-    // Cleanup function to clear the timer if the component unmounts
-    // or if the dependencies of the effect change (e.g., user clicks a step).
     return () => clearTimeout(timerId);
   }, [currentNumber, totalSteps, interval]);
 
-  // This function allows manual setting of the step.
-  // When called, it updates `currentNumber`, which will trigger the useEffect
-  // to reset the timer for the next cycle.
   const setStep = useCallback((stepIndex: number) => {
       setCurrentNumber(stepIndex % totalSteps);
   }, [totalSteps]);
 
   return { currentNumber, setStep };
 }
-
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false)
@@ -246,19 +222,23 @@ function FeatureCard({ children, step }: { children: React.ReactNode; step: numb
       onMouseMove={handleMouseMove}
       style={{ "--x": useMotionTemplate`${mouseX}px`, "--y": useMotionTemplate`${mouseY}px` } as WrapperStyle}
     >
-      <div className="relative w-full overflow-hidden rounded-3xl border border-neutral-200 bg-white transition-colors duration-300 dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="m-10 min-h-[450px] w-full">
+      <div className="relative w-full overflow-hidden rounded-[2.5rem] border border-white/5 bg-slate-950/80 backdrop-blur-md transition-colors duration-300">
+        
+        {/* Spotlight hover effect background */}
+        <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(400px_circle_at_var(--x)_var(--y),rgba(20,184,166,0.08),transparent_80%)]" />
+
+        <div className="m-10 min-h-[450px] w-full flex flex-col md:flex-row gap-12 relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              className="flex w-full flex-col gap-4 md:w-3/5"
+              className="flex w-full flex-col gap-5 md:w-[45%] justify-center pr-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             >
               <motion.div
-                className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-500"
+                className="text-[10px] font-black uppercase tracking-widest text-teal-400"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05, duration: 0.3, ease: [0.22, 1, 0.36, 1]}}
@@ -266,7 +246,7 @@ function FeatureCard({ children, step }: { children: React.ReactNode; step: numb
                   {steps[step].name}
               </motion.div>
               <motion.h2
-                className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 md:text-3xl"
+                className="text-3xl md:text-4xl font-black tracking-tight text-white uppercase leading-none"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3, ease: [0.22, 1, 0.36, 1]}}
@@ -278,13 +258,16 @@ function FeatureCard({ children, step }: { children: React.ReactNode; step: numb
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15, duration: 0.3, ease: [0.22, 1, 0.36, 1]}}
               >
-                <p className="text-base leading-relaxed text-neutral-700 dark:text-neutral-400">
+                <p className="text-sm leading-relaxed text-slate-400 font-semibold">
                   {steps[step].description}
                 </p>
               </motion.div>
             </motion.div>
           </AnimatePresence>
-          {children}
+          
+          <div className="flex-1 relative min-h-[300px] md:min-h-full overflow-hidden rounded-2xl bg-slate-900/40 border border-white/5">
+            {children}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -294,7 +277,7 @@ function FeatureCard({ children, step }: { children: React.ReactNode; step: numb
 function StepsNav({ steps: stepItems, current, onChange }: { steps: readonly Step[]; current: number; onChange: (index: number) => void; }) {
     return (
         <nav aria-label="Progress" className="flex justify-center px-4">
-            <ol className="flex w-full flex-wrap items-center justify-center gap-2" role="list">
+            <ol className="flex w-full flex-wrap items-center justify-center gap-3" role="list">
                 {stepItems.map((step, stepIdx) => {
                     const isCompleted = current > stepIdx;
                     const isCurrent = current === stepIdx;
@@ -303,20 +286,20 @@ function StepsNav({ steps: stepItems, current, onChange }: { steps: readonly Ste
                             <button
                                 type="button"
                                 className={cn(
-                                    "group flex items-center gap-2.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 dark:focus-visible:ring-offset-black",
+                                    "group flex items-center gap-2.5 rounded-full px-5 py-2.5 text-xs font-black uppercase tracking-wider transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-500",
                                     isCurrent 
-                                        ? "bg-sky-600 text-white dark:bg-sky-500" 
-                                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                                        ? "bg-teal-500 text-black shadow-lg shadow-teal-500/10" 
+                                        : "bg-slate-950 border border-white/5 text-slate-400 hover:text-white hover:bg-slate-900"
                                 )}
                                 onClick={() => onChange(stepIdx)}
                             >
                                 <span className={cn(
                                     "flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all duration-300",
                                     isCompleted 
-                                        ? "bg-sky-600 text-white dark:bg-sky-500" 
+                                        ? "bg-teal-600 text-white" 
                                         : isCurrent 
-                                            ? "bg-sky-400 text-sky-900 dark:bg-sky-400 dark:text-sky-900" 
-                                            : "bg-neutral-200 text-neutral-700 group-hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-200 dark:group-hover:bg-neutral-600"
+                                            ? "bg-teal-400 text-teal-950 font-bold" 
+                                            : "bg-slate-900 text-slate-400 group-hover:bg-slate-800"
                                 )}>
                                     {isCompleted ? (
                                         <IconCheck className="h-3.5 w-3.5" />
@@ -324,7 +307,7 @@ function StepsNav({ steps: stepItems, current, onChange }: { steps: readonly Ste
                                         <span>{stepIdx + 1}</span>
                                     )}
                                 </span>
-                                <span className="hidden sm:inline-block">{step.name}</span>
+                                <span className="inline-block">{step.name}</span>
                             </button>
                         </motion.li>
                     );
@@ -335,13 +318,13 @@ function StepsNav({ steps: stepItems, current, onChange }: { steps: readonly Ste
 }
 
 const defaultClasses = {
-  img: "rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-2xl shadow-black/10 dark:shadow-neutral-950/50",
-  step1img1: "w-[50%] left-0 top-[15%]",
-  step1img2: "w-[60%] left-[40%] top-[35%]",
-  step2img1: "w-[50%] left-[5%] top-[20%]",
-  step2img2: "w-[40%] left-[55%] top-[45%]",
-  step3img: "w-[90%] left-[5%] top-[25%]",
-  step4img: "w-[90%] left-[5%] top-[25%]",
+  img: "rounded-xl border border-white/5 shadow-2xl shadow-black/80 max-h-[80%] object-cover",
+  step1img1: "w-[60%] left-4 top-[10%] z-10",
+  step1img2: "w-[60%] left-[35%] top-[25%] z-20",
+  step2img1: "w-[80%] left-[10%] top-[10%] z-10",
+  step2img2: "w-[40%] left-[50%] top-[40%] z-20",
+  step3img: "w-[85%] left-[7.5%] top-[10%] z-10",
+  step4img: "w-[85%] left-[7.5%] top-[10%] z-10",
 } as const
 
 export function FeatureCarousel({
@@ -354,7 +337,7 @@ export function FeatureCarousel({
   step4imgClass = defaultClasses.step4img,
   ...props
 }: FeatureCarouselProps) {
-  const { currentNumber: step, setStep } = useNumberCycler()
+  const { currentNumber: step, setStep } = useNumberCycler(TOTAL_STEPS, 4000)
   const renderStepContent = () => {
     switch (step) {
       case 0:
@@ -379,7 +362,7 @@ export function FeatureCarousel({
     }
   }
   return (
-    <div className="flex flex-col gap-12 w-full max-w-4xl mx-auto p-4">
+    <div className="flex flex-col gap-12 w-full max-w-7xl mx-auto p-4 relative z-20">
         <FeatureCard {...props} step={step}>
             <AnimatePresence mode="wait">
                 <motion.div key={step} {...ANIMATION_PRESETS.fadeInScale} className="w-full h-full absolute">
@@ -393,50 +376,3 @@ export function FeatureCarousel({
     </div>
   )
 }
-
-demo.tsx
-import { FeatureCarousel } from "@/components/ui/animated-feature-carousel";
-
-export default function App() {
-    const images: ImageSet = {
-        alt: "Feature screenshot",
-        step1img1: "https://images.unsplash.com/photo-1618761714954-0b8cd0026356?q=80&w=1740&auto=format&fit=crop",
-        step1img2: "https://images.unsplash.com/photo-1607705703571-c5a8695f18f6?q=80&w=1740&auto=format&fit=crop",
-        step2img1: "https://images.unsplash.com/photo-1542393545-10f5cde2c810?q=80&w=1661&auto=format&fit=crop",
-        step2img2: "https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=1674&auto=format&fit=crop",
-        step3img: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1740&auto=format&fit=crop",
-        step4img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1742&auto=format&fit=crop",
-    };
-
-    return (
-    <div className="w-full font-sans">
-         <FeatureCarousel
-                image={images}
-            />
-    </div>
-    );
-}
-
-```
-
-Install NPM dependencies:
-```bash
-clsx, framer-motion
-```
-
-Implementation Guidelines
- 1. Analyze the component structure and identify all required dependencies
- 2. Review the component's argumens and state
- 3. Identify any required context providers or hooks and install them
- 4. Questions to Ask
- - What data/props will be passed to this component?
- - Are there any specific state management requirements?
- - Are there any required assets (images, icons, etc.)?
- - What is the expected responsive behavior?
- - What is the best place to use this component in the app?
-
-Steps to integrate
- 0. Copy paste all the code above in the correct directories
- 1. Install external dependencies
- 2. Fill image assets with Unsplash stock images you know exist
- 3. Use lucide-react icons for svgs or logos if component requires them
